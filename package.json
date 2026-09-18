@@ -1,6 +1,6 @@
 {
   "name": "port-viewer",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Port Viewer - 面向 Windows 开发者的中文端口管理工具",
   "main": "src/main.js",
   "author": "zecrbin",

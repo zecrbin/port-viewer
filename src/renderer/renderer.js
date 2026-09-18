@@ -7,39 +7,21 @@ const state = {
   timer: null
 };
 
-const SERVICE_PORTS = new Map([
-  [80, ['web', 'HTTP']], [443, ['web', 'HTTPS']],
-  [3000, ['web', '前端开发']], [3001, ['web', '前端开发']], [4173, ['web', 'Vite 预览']],
-  [4200, ['web', 'Angular']], [5000, ['web', '后端 API']], [5173, ['web', 'Vite']],
-  [5190, ['web', 'Vite']], [8000, ['web', '后端 API']], [8080, ['web', '后端 API']],
-  [8090, ['web', '后端 API']], [8091, ['web', 'Worker']], [9000, ['web', '应用服务']],
-  [1433, ['data', 'SQL Server']], [1521, ['data', 'Oracle']], [3306, ['data', 'MySQL']],
-  [5432, ['data', 'PostgreSQL']], [6379, ['data', 'Redis']], [9200, ['data', 'Elasticsearch']],
-  [9300, ['data', 'ES 集群']], [11211, ['data', 'Memcached']], [27017, ['data', 'MongoDB']],
-  [4222, ['message', 'NATS']], [5672, ['message', 'RabbitMQ']], [15672, ['message', 'RabbitMQ 控制台']],
-  [9092, ['message', 'Kafka']], [9876, ['message', 'RocketMQ NameServer']], [10911, ['message', 'RocketMQ Broker']],
-  [2375, ['infra', 'Docker']], [2376, ['infra', 'Docker TLS']], [6443, ['infra', 'Kubernetes']],
-  [7233, ['infra', 'Temporal']], [8233, ['infra', 'Temporal UI']], [8500, ['infra', 'Consul']],
-  [9090, ['infra', 'Prometheus']], [9100, ['infra', 'Node Exporter']],
-  [7860, ['ai', 'Gradio']], [7861, ['ai', 'Gradio']], [8188, ['ai', 'ComfyUI']],
-  [11434, ['ai', 'Ollama']], [1234, ['ai', '本地模型']]
-]);
-
-const CATEGORY_LABELS = {
-  web: 'Web 与后端',
-  data: '数据存储',
-  message: '消息中间件',
-  infra: '基础设施',
-  ai: 'AI 与模型',
-  other: '其他服务'
-};
+const { categoryLabels: CATEGORY_LABELS, classifyService, explainService, getScopeInfo } = window.serviceCatalog;
 
 const elements = Object.fromEntries(
   [
     'portRows', 'emptyState', 'loadingState', 'searchInput', 'refreshButton', 'autoRefresh',
     'listeningStat', 'processStat', 'developerStat', 'allCount', 'webCount', 'dataCount',
     'messageCount', 'infraCount', 'aiCount', 'otherCount', 'visibleCount', 'lastUpdated', 'dialogBackdrop', 'dialogDescription',
-    'processProof', 'cancelKill', 'confirmKill', 'toastRegion', 'themeButton'
+    'processProof', 'cancelKill', 'confirmKill', 'toastRegion', 'themeButton',
+    'detailScrim', 'detailDrawer', 'detailCategory', 'detailTitle', 'detailSubtitle',
+    'detailExplanation', 'scopeCard', 'scopeLabel', 'scopeDescription', 'detailProcess',
+    'detailPid', 'detailStarted', 'detailOwner', 'detailMemory', 'detailThreads',
+    'detailParent', 'detailSignature', 'detailFileDescription', 'detailProduct',
+    'detailCompany', 'detailVersion', 'detailPath', 'windowsServiceSection',
+    'windowsServices', 'relatedPorts', 'detailCommand', 'closeDetail', 'revealDetail',
+    'killFromDetail'
   ].map((id) => [id, document.getElementById(id)])
 );
 
@@ -50,26 +32,6 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
-}
-
-function classifyService(item) {
-  const processName = String(item.processName || '').toLowerCase();
-  if (/ollama|llama|vllm|comfy|stable-diffusion/.test(processName)) return { category: 'ai', service: '模型服务' };
-  if (/postgres|mysql|redis|mongod|sqlservr|elasticsearch/.test(processName)) {
-    return { category: 'data', service: SERVICE_PORTS.get(Number(item.port))?.[1] || '数据服务' };
-  }
-  if (/rabbitmq|kafka|nats|rocketmq/.test(processName)) {
-    return { category: 'message', service: SERVICE_PORTS.get(Number(item.port))?.[1] || '消息服务' };
-  }
-  if (/docker|containerd|kubectl|temporal|prometheus|grafana|consul/.test(processName)) {
-    return { category: 'infra', service: SERVICE_PORTS.get(Number(item.port))?.[1] || '基础设施' };
-  }
-  const known = SERVICE_PORTS.get(Number(item.port));
-  if (known) return { category: known[0], service: known[1] };
-  if (/java|node|python|dotnet|php|ruby|go/.test(processName) && Number(item.port) >= 1024) {
-    return { category: 'web', service: '开发服务' };
-  }
-  return { category: 'other', service: '未分类' };
 }
 
 function filteredPorts() {
@@ -111,7 +73,7 @@ function render() {
       <td>${item.pid}</td>
       <td title="${escapeHtml(item.address)}">${escapeHtml(item.address)}</td>
       <td><span class="service-badge ${classification.category}">${escapeHtml(CATEGORY_LABELS[classification.category])}</span></td>
-      <td><button class="action-button" data-kill-pid="${item.pid}" data-port="${item.port}">释放端口</button></td>
+      <td><button class="action-button" data-view-pid="${item.pid}" data-port="${item.port}">查看详情</button></td>
     </tr>
   `;
   }).join('');
@@ -146,18 +108,115 @@ function showToast(title, message, type = 'success') {
   setTimeout(() => toast.remove(), 3600);
 }
 
-async function openKillDialog(pid, port) {
+function formatDateTime(value) {
+  if (!value) return '不可用';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '不可用';
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).format(date);
+}
+
+function setDetailLoading(item) {
+  const classification = classifyService(item);
+  elements.detailCategory.textContent = CATEGORY_LABELS[classification.category];
+  elements.detailTitle.textContent = classification.service;
+  elements.detailSubtitle.textContent = `${item.protocol} ${item.address}:${item.port} · PID ${item.pid}`;
+  elements.detailExplanation.textContent = explainService(item);
+  ['detailProcess', 'detailStarted', 'detailOwner', 'detailMemory', 'detailThreads', 'detailParent',
+    'detailSignature', 'detailFileDescription', 'detailProduct', 'detailCompany', 'detailVersion', 'detailPath']
+    .forEach((key) => { elements[key].textContent = key === 'detailProcess' ? item.processName : '读取中…'; });
+  elements.detailPid.textContent = item.pid;
+  elements.detailCommand.textContent = '正在读取启动命令…';
+  elements.windowsServiceSection.hidden = true;
+  elements.relatedPorts.innerHTML = '';
+  elements.revealDetail.disabled = true;
+
+  const scope = getScopeInfo(item.address);
+  elements.scopeCard.dataset.level = scope.level;
+  elements.scopeLabel.textContent = scope.label;
+  elements.scopeDescription.textContent = scope.description;
+}
+
+function renderDetail(item) {
+  const details = item.details || {};
+  const classification = classifyService(item);
+  const services = Array.isArray(details.services) ? details.services : (details.services ? [details.services] : []);
+  const related = state.ports.filter((candidate) => candidate.pid === item.pid);
+  const signatureLabels = { Valid: '签名有效', NotSigned: '未签名', HashMismatch: '签名不匹配', NotTrusted: '签名不受信任', UnknownError: '无法验证', Unknown: '未知' };
+
+  elements.detailCategory.textContent = CATEGORY_LABELS[classification.category];
+  elements.detailTitle.textContent = classification.service;
+  elements.detailExplanation.textContent = explainService(item, details);
+  elements.detailProcess.textContent = details.name || item.processName || '未知';
+  elements.detailPid.textContent = item.pid;
+  elements.detailStarted.textContent = formatDateTime(details.startedAt);
+  elements.detailOwner.textContent = details.owner || '不可用';
+  elements.detailMemory.textContent = details.workingSetMb == null ? '不可用' : `${details.workingSetMb} MB`;
+  elements.detailThreads.textContent = details.threadCount ?? '不可用';
+  elements.detailParent.textContent = details.parentPid ? `${details.parentName || '未知'} · ${details.parentPid}` : '不可用';
+  elements.detailSignature.textContent = `${signatureLabels[details.signatureStatus] || details.signatureStatus || '未知'}${details.signer ? ` · ${details.signer}` : ''}`;
+  elements.detailFileDescription.textContent = details.fileDescription || '未提供';
+  elements.detailProduct.textContent = details.productName || '未提供';
+  elements.detailCompany.textContent = details.companyName || '未提供';
+  elements.detailVersion.textContent = details.fileVersion || '未提供';
+  elements.detailPath.textContent = details.path || '路径不可见';
+  elements.detailCommand.textContent = details.commandLine || '无法读取命令行';
+  elements.revealDetail.disabled = !details.path;
+
+  elements.windowsServiceSection.hidden = services.length === 0;
+  elements.windowsServices.innerHTML = services.map((service) => `
+    <article><strong>${escapeHtml(service.displayName || service.name)}</strong><span>${escapeHtml(service.name)} · ${escapeHtml(service.state)} · ${escapeHtml(service.startMode)}</span></article>
+  `).join('');
+  elements.relatedPorts.innerHTML = related.map((port) => `
+    <span>${escapeHtml(port.protocol)} ${escapeHtml(port.address)}:<b>${port.port}</b></span>
+  `).join('');
+}
+
+async function openDetail(pid, port) {
   const item = state.ports.find((candidate) => candidate.pid === Number(pid) && candidate.port === Number(port));
+  if (!item) return;
+  state.selected = { ...item };
+  setDetailLoading(item);
+  elements.detailScrim.hidden = false;
+  elements.detailDrawer.hidden = false;
+  requestAnimationFrame(() => elements.detailDrawer.classList.add('open'));
+  try {
+    const details = await window.portLantern.getProcessDetails(item.pid);
+    if (state.selected?.pid !== item.pid || state.selected?.port !== item.port) return;
+    state.selected = { ...item, details };
+    renderDetail(state.selected);
+  } catch (error) {
+    elements.detailExplanation.textContent = `${explainService(item)} 进程详情读取失败：${error.message}`;
+    showToast('详情读取失败', error.message, 'error');
+  }
+}
+
+function closeDetailPanel() {
+  elements.detailDrawer.classList.remove('open');
+  elements.detailScrim.hidden = true;
+  setTimeout(() => { elements.detailDrawer.hidden = true; }, 180);
+  state.selected = null;
+}
+
+async function openKillDialog(pid, port) {
+  const item = state.selected?.pid === Number(pid)
+    ? state.selected
+    : state.ports.find((candidate) => candidate.pid === Number(pid) && candidate.port === Number(port));
   if (!item) return;
   state.selected = item;
   elements.dialogDescription.textContent = `进程“${item.processName}”正在使用 ${item.protocol} 端口 ${item.port}。结束它会同时释放该进程占用的其他端口。`;
   elements.processProof.textContent = `PID ${item.pid}  ·  正在读取进程路径…`;
   elements.dialogBackdrop.hidden = false;
   elements.confirmKill.focus();
+  if (item.details) {
+    elements.processProof.textContent = `PID ${item.pid}  ·  ${item.details.path || item.details.commandLine || '无法读取可执行文件路径'}`;
+    return;
+  }
   try {
     const details = await window.portLantern.getProcessDetails(item.pid);
     if (state.selected?.pid !== item.pid) return;
-    state.selected = { ...item, ...details };
+    state.selected = { ...item, details };
     elements.processProof.textContent = `PID ${item.pid}  ·  ${details.path || details.commandLine || '无法读取可执行文件路径'}`;
   } catch {
     elements.processProof.textContent = `PID ${item.pid}  ·  进程可能已经退出或路径不可见`;
@@ -166,7 +225,6 @@ async function openKillDialog(pid, port) {
 
 function closeKillDialog() {
   elements.dialogBackdrop.hidden = true;
-  state.selected = null;
 }
 
 async function confirmKill() {
@@ -181,6 +239,7 @@ async function confirmKill() {
       await window.portLantern.killProcess(target.pid, true);
     }
     closeKillDialog();
+    closeDetailPanel();
     showToast('端口已释放', `${target.processName}（PID ${target.pid}）已结束。`);
     setTimeout(() => refreshPorts({ quiet: true }), 350);
   } catch (error) {
@@ -213,22 +272,18 @@ elements.searchInput.addEventListener('input', (event) => {
 });
 
 elements.portRows.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-kill-pid]');
-  if (button) openKillDialog(button.dataset.killPid, button.dataset.port);
+  const button = event.target.closest('[data-view-pid]');
+  if (button) openDetail(button.dataset.viewPid, button.dataset.port);
 });
 
-elements.portRows.addEventListener('dblclick', async (event) => {
-  const row = event.target.closest('tr');
-  const button = row?.querySelector('[data-kill-pid]');
-  const item = button && state.ports.find((candidate) => candidate.pid === Number(button.dataset.killPid));
-  if (!item) return;
-  try {
-    const details = await window.portLantern.getProcessDetails(item.pid);
-    if (details.path) await window.portLantern.revealProcess(details.path);
-    else showToast('无法定位', '该进程的可执行文件路径不可见。', 'error');
-  } catch (error) {
-    showToast('无法定位', error.message, 'error');
-  }
+elements.closeDetail.addEventListener('click', closeDetailPanel);
+elements.detailScrim.addEventListener('click', closeDetailPanel);
+elements.revealDetail.addEventListener('click', async () => {
+  const filePath = state.selected?.details?.path;
+  if (filePath) await window.portLantern.revealProcess(filePath);
+});
+elements.killFromDetail.addEventListener('click', () => {
+  if (state.selected) openKillDialog(state.selected.pid, state.selected.port);
 });
 
 elements.refreshButton.addEventListener('click', () => refreshPorts());
@@ -256,6 +311,7 @@ document.addEventListener('keydown', (event) => {
   }
   if (event.key === 'Escape') {
     if (!elements.dialogBackdrop.hidden) closeKillDialog();
+    else if (!elements.detailDrawer.hidden) closeDetailPanel();
     else elements.searchInput.blur();
   }
   if (event.key === 'F5') {

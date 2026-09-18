@@ -115,6 +115,75 @@
       </main>
     </div>
 
+    <div class="detail-scrim" id="detailScrim" hidden></div>
+    <aside class="detail-drawer" id="detailDrawer" aria-label="服务详情" hidden>
+      <header class="detail-header">
+        <div>
+          <span class="detail-kicker" id="detailCategory">服务详情</span>
+          <h3 id="detailTitle">正在读取…</h3>
+          <p id="detailSubtitle"></p>
+        </div>
+        <button class="drawer-close" id="closeDetail" aria-label="关闭详情">×</button>
+      </header>
+
+      <div class="detail-scroll">
+        <section class="explain-card">
+          <span>这是做什么的？</span>
+          <p id="detailExplanation">正在分析服务信息…</p>
+        </section>
+
+        <section class="scope-card" id="scopeCard">
+          <div class="scope-icon">◎</div>
+          <div><strong id="scopeLabel">监听范围</strong><p id="scopeDescription"></p></div>
+        </section>
+
+        <section class="detail-section">
+          <h4>进程概况</h4>
+          <dl class="detail-grid">
+            <div><dt>进程名称</dt><dd id="detailProcess">—</dd></div>
+            <div><dt>PID</dt><dd id="detailPid">—</dd></div>
+            <div><dt>启动时间</dt><dd id="detailStarted">—</dd></div>
+            <div><dt>运行账户</dt><dd id="detailOwner">—</dd></div>
+            <div><dt>内存占用</dt><dd id="detailMemory">—</dd></div>
+            <div><dt>线程数量</dt><dd id="detailThreads">—</dd></div>
+            <div><dt>父进程</dt><dd id="detailParent">—</dd></div>
+            <div><dt>数字签名</dt><dd id="detailSignature">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="detail-section">
+          <h4>软件身份</h4>
+          <dl class="identity-list">
+            <div><dt>文件说明</dt><dd id="detailFileDescription">—</dd></div>
+            <div><dt>产品</dt><dd id="detailProduct">—</dd></div>
+            <div><dt>厂商</dt><dd id="detailCompany">—</dd></div>
+            <div><dt>版本</dt><dd id="detailVersion">—</dd></div>
+            <div><dt>文件路径</dt><dd class="selectable" id="detailPath">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="detail-section" id="windowsServiceSection" hidden>
+          <h4>关联的 Windows 服务</h4>
+          <div class="windows-services" id="windowsServices"></div>
+        </section>
+
+        <section class="detail-section">
+          <h4>该进程占用的端口</h4>
+          <div class="related-ports" id="relatedPorts"></div>
+        </section>
+
+        <section class="detail-section">
+          <h4>启动命令</h4>
+          <pre class="command-line selectable" id="detailCommand">无法读取命令行</pre>
+        </section>
+      </div>
+
+      <footer class="detail-actions">
+        <button class="text-button" id="revealDetail">定位文件</button>
+        <button class="danger-outline-button" id="killFromDetail">结束进程</button>
+      </footer>
+    </aside>
+
     <div class="dialog-backdrop" id="dialogBackdrop" hidden>
       <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
         <div class="danger-beacon">!</div>
@@ -132,6 +201,7 @@
     </div>
 
     <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+    <script src="service-catalog.js"></script>
     <script src="renderer.js"></script>
   </body>
 </html>

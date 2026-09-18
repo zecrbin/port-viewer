@@ -196,6 +196,47 @@ tbody tr:hover { background: var(--lime-soft); }
 .toast { min-width: 260px; max-width: 380px; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface-raised); box-shadow: var(--shadow); font-size: 10px; animation: toast-in .25s ease; }
 .toast strong { display: block; color: var(--text); margin-bottom: 3px; }.toast span { color: var(--muted); }.toast.error { border-left: 3px solid var(--orange); }.toast.success { border-left: 3px solid var(--lime); }
 
+.detail-scrim { position: fixed; z-index: 9; inset: 42px 0 0; background: rgba(12, 18, 14, .28); backdrop-filter: blur(3px); animation: fade-in .18s ease; }
+.detail-scrim[hidden], .detail-drawer[hidden] { display: none; }
+.detail-drawer { position: fixed; z-index: 10; top: 42px; right: 0; bottom: 0; width: min(460px, 46vw); display: flex; flex-direction: column; background: var(--surface-raised); border-left: 1px solid var(--line-strong); box-shadow: -28px 0 70px rgba(0, 0, 0, .18); transform: translateX(100%); transition: transform .2s ease; }
+.detail-drawer.open { transform: translateX(0); }
+.detail-header { flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 25px 25px 19px; border-bottom: 1px solid var(--line); }
+.detail-kicker { color: var(--lime); font: 700 9px Bahnschrift, sans-serif; letter-spacing: .16em; text-transform: uppercase; }
+.detail-header h3 { margin: 6px 0 5px; font-size: 22px; letter-spacing: -.04em; }
+.detail-header p { margin: 0; color: var(--muted); font: 10px Bahnschrift, sans-serif; }
+.drawer-close { width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--muted); font-size: 18px; cursor: pointer; }
+.drawer-close:hover { border-color: var(--text); color: var(--text); }
+.detail-scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 20px 25px 26px; }
+.explain-card { padding: 17px 18px; border-radius: 10px; background: var(--lime-soft); border: 1px solid color-mix(in srgb, var(--lime) 32%, transparent); }
+.explain-card > span { display: block; color: var(--lime); font-size: 9px; font-weight: 700; letter-spacing: .08em; }
+.explain-card p { margin: 8px 0 0; color: var(--text); font-size: 12px; line-height: 1.8; }
+.scope-card { display: flex; align-items: center; gap: 12px; margin-top: 11px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.scope-card[data-level='warn'] { border-color: color-mix(in srgb, var(--orange) 45%, transparent); background: color-mix(in srgb, var(--orange) 7%, var(--surface)); }
+.scope-icon { width: 30px; height: 30px; flex: 0 0 auto; display: grid; place-content: center; border-radius: 50%; background: var(--lime-soft); color: var(--lime); font-size: 17px; }
+.scope-card[data-level='warn'] .scope-icon { color: var(--orange); background: color-mix(in srgb, var(--orange) 11%, transparent); }
+.scope-card strong, .scope-card p { display: block; }.scope-card strong { font-size: 10px; }.scope-card p { margin: 3px 0 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.detail-section { margin-top: 23px; }
+.detail-section h4 { margin: 0 0 10px; color: var(--faint); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; margin: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--line); }
+.detail-grid > div { min-width: 0; padding: 11px 12px; background: var(--surface); }
+.detail-grid dt, .identity-list dt { color: var(--faint); font-size: 8px; }
+.detail-grid dd, .identity-list dd { margin: 4px 0 0; color: var(--text); font-size: 10px; overflow: hidden; text-overflow: ellipsis; }
+.identity-list { margin: 0; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.identity-list > div { display: grid; grid-template-columns: 78px 1fr; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.identity-list > div:last-child { border-bottom: 0; }.identity-list dd { margin: 0; line-height: 1.5; }
+.selectable { user-select: text; cursor: text; overflow-wrap: anywhere; white-space: normal; }
+.windows-services { display: grid; gap: 7px; }
+.windows-services article { padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.windows-services strong, .windows-services span { display: block; }.windows-services strong { font-size: 10px; }.windows-services span { margin-top: 4px; color: var(--faint); font: 8px Bahnschrift, sans-serif; }
+.related-ports { display: flex; flex-wrap: wrap; gap: 6px; }
+.related-ports span { padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--muted); font: 8px Bahnschrift, sans-serif; }
+.related-ports b { color: var(--text); }
+.command-line { max-height: 112px; margin: 0; padding: 12px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--canvas-soft); color: var(--muted); font: 9px/1.65 Consolas, monospace; }
+.detail-actions { flex: 0 0 auto; display: flex; justify-content: flex-end; gap: 9px; padding: 15px 25px; border-top: 1px solid var(--line); background: var(--surface-raised); }
+.danger-outline-button { padding: 9px 15px; border: 1px solid var(--orange); border-radius: 7px; background: transparent; color: var(--orange); font-size: 10px; font-weight: 700; cursor: pointer; }
+.danger-outline-button:hover { background: color-mix(in srgb, var(--orange) 10%, transparent); }
+.detail-actions button:disabled { opacity: .38; cursor: not-allowed; }
+
 @keyframes pulse { 50% { box-shadow: 0 0 0 8px transparent; } }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes signal { to { height: 12px; } }
@@ -203,6 +244,7 @@ tbody tr:hover { background: var(--lime-soft); }
 @keyframes row-in { from { opacity: 0; transform: translateY(5px); } }
 @keyframes dialog-in { from { opacity: 0; transform: scale(.97) translateY(8px); } }
 @keyframes toast-in { from { opacity: 0; transform: translateX(12px); } }
+@keyframes fade-in { from { opacity: 0; } }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }

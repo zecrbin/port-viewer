@@ -38,12 +38,37 @@ async function getProcessSnapshot(pid) {
   const script = `
     $process = Get-Process -Id ${pid} -ErrorAction Stop
     $cim = Get-CimInstance Win32_Process -Filter "ProcessId = ${pid}" -ErrorAction SilentlyContinue
+    $processPath = if ($process.Path) { $process.Path } else { $cim.ExecutablePath }
+    $version = if ($processPath) { [System.Diagnostics.FileVersionInfo]::GetVersionInfo($processPath) } else { $null }
+    $parent = if ($cim.ParentProcessId) { Get-Process -Id $cim.ParentProcessId -ErrorAction SilentlyContinue } else { $null }
+    $services = @(Get-CimInstance Win32_Service -Filter "ProcessId = ${pid}" -ErrorAction SilentlyContinue | ForEach-Object {
+      [pscustomobject]@{ name=$_.Name; displayName=$_.DisplayName; state=$_.State; startMode=$_.StartMode }
+    })
+    $ownerText = $null
+    if ($cim) {
+      $owner = Invoke-CimMethod -InputObject $cim -MethodName GetOwner -ErrorAction SilentlyContinue
+      if ($owner.User) { $ownerText = if ($owner.Domain) { "$($owner.Domain)\\$($owner.User)" } else { $owner.User } }
+    }
+    $signature = if ($processPath) { Get-AuthenticodeSignature -FilePath $processPath -ErrorAction SilentlyContinue } else { $null }
     [pscustomobject]@{
       name=$process.ProcessName
-      path=if ($process.Path) { $process.Path } else { $cim.ExecutablePath }
+      path=$processPath
       commandLine=$cim.CommandLine
       startedAt=if ($process.StartTime) { $process.StartTime.ToString('o') } else { $null }
-    } | ConvertTo-Json -Compress
+      parentPid=if ($cim.ParentProcessId) { [int]$cim.ParentProcessId } else { $null }
+      parentName=if ($parent) { $parent.ProcessName } else { $null }
+      owner=$ownerText
+      workingSetMb=[math]::Round($process.WorkingSet64 / 1MB, 1)
+      cpuSeconds=if ($null -ne $process.CPU) { [math]::Round($process.CPU, 1) } else { $null }
+      threadCount=if ($process.Threads) { $process.Threads.Count } else { $null }
+      fileDescription=if ($version) { $version.FileDescription } else { $null }
+      companyName=if ($version) { $version.CompanyName } else { $null }
+      productName=if ($version) { $version.ProductName } else { $null }
+      fileVersion=if ($version) { $version.FileVersion } else { $null }
+      signatureStatus=if ($signature) { $signature.Status.ToString() } else { 'Unknown' }
+      signer=if ($signature.SignerCertificate) { $signature.SignerCertificate.GetNameInfo('SimpleName', $false) } else { $null }
+      services=$services
+    } | ConvertTo-Json -Compress -Depth 5
   `;
   return JSON.parse(await runPowerShell(script));
 }
