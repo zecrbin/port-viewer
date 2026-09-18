@@ -73,7 +73,10 @@ function render() {
       <td>${item.pid}</td>
       <td title="${escapeHtml(item.address)}">${escapeHtml(item.address)}</td>
       <td><span class="service-badge ${classification.category}">${escapeHtml(CATEGORY_LABELS[classification.category])}</span></td>
-      <td><button class="action-button" data-view-pid="${item.pid}" data-port="${item.port}">查看详情</button></td>
+      <td><div class="row-actions">
+        <button class="action-button" data-view-pid="${item.pid}" data-port="${item.port}">详情</button>
+        <button class="action-button kill" data-kill-pid="${item.pid}" data-port="${item.port}">结束</button>
+      </div></td>
     </tr>
   `;
   }).join('');
@@ -272,6 +275,11 @@ elements.searchInput.addEventListener('input', (event) => {
 });
 
 elements.portRows.addEventListener('click', (event) => {
+  const killButton = event.target.closest('[data-kill-pid]');
+  if (killButton) {
+    openKillDialog(killButton.dataset.killPid, killButton.dataset.port);
+    return;
+  }
   const button = event.target.closest('[data-view-pid]');
   if (button) openDetail(button.dataset.viewPid, button.dataset.port);
 });

@@ -159,7 +159,7 @@ table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 thead { position: sticky; top: 0; z-index: 2; background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); }
 th { height: 38px; color: var(--faint); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-align: left; border-bottom: 1px solid var(--line); }
 th:first-child, td:first-child { padding-left: 20px; width: 92px; }
-th:nth-child(2) { width: 75px; } th:nth-child(4) { width: 78px; } th:nth-child(5) { width: 145px; } th:nth-child(6) { width: 130px; } th:last-child { width: 92px; }
+th:nth-child(2) { width: 75px; } th:nth-child(4) { width: 78px; } th:nth-child(5) { width: 145px; } th:nth-child(6) { width: 130px; } th:last-child { width: 126px; }
 td { height: 53px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 tbody tr { transition: .15s ease; animation: row-in .3s ease both; }
 tbody tr:hover { background: var(--lime-soft); }
@@ -171,8 +171,11 @@ tbody tr:hover { background: var(--lime-soft); }
 .service-badge.web { --service-color: var(--blue); }.service-badge.data { --service-color: var(--lime); }.service-badge.message { --service-color: #d9a7ff; }.service-badge.infra { --service-color: #ffd166; }.service-badge.ai { --service-color: var(--orange); }
 .process-cell { color: var(--text); font-weight: 700; cursor: default; }
 .process-cell span { display: block; color: var(--faint); font-size: 8px; font-weight: 400; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; }
+.row-actions { display: flex; align-items: center; gap: 5px; }
 .action-button { border: 1px solid var(--line-strong); background: transparent; color: var(--muted); padding: 6px 9px; border-radius: 6px; font-size: 9px; cursor: pointer; }
-.action-button:hover { color: var(--orange); border-color: var(--orange); background: color-mix(in srgb, var(--orange) 8%, transparent); }
+.action-button:hover { color: var(--blue); border-color: var(--blue); background: color-mix(in srgb, var(--blue) 8%, transparent); }
+.action-button.kill { color: var(--orange); border-color: color-mix(in srgb, var(--orange) 40%, var(--line)); }
+.action-button.kill:hover { color: #fff; border-color: var(--orange); background: var(--orange); }
 
 .empty-state, .loading-state { position: absolute; inset: 38px 0 0; display: grid; place-content: center; text-align: center; background: var(--surface); }
 .empty-state[hidden], .loading-state[hidden] { display: none; }
