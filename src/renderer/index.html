@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:;" />
+    <title>Port Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body data-theme="light">
+    <div class="app-shell">
+      <header class="titlebar">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="titlebar-name">PORT VIEWER</div>
+        <div class="titlebar-drag"></div>
+        <button class="window-button" id="minimizeButton" aria-label="最小化">—</button>
+        <button class="window-button" id="maximizeButton" aria-label="最大化">□</button>
+        <button class="window-button close" id="closeButton" aria-label="关闭">×</button>
+      </header>
+
+      <aside class="sidebar">
+        <section class="identity">
+          <div class="eyebrow">WINDOWS PORT DESK</div>
+          <h1>让每一个<br /><em>监听端口</em><br />清晰可见。</h1>
+          <p>查找冲突、辨认进程，并在确认后安全释放端口。</p>
+        </section>
+
+        <nav class="nav-list" aria-label="视图筛选">
+          <button class="nav-item active" data-filter="all"><span class="nav-icon">◉</span>全部端口 <b id="allCount">0</b></button>
+          <div class="nav-caption">服务分类</div>
+          <button class="nav-item" data-filter="web"><span class="nav-icon category-dot web"></span>Web 与后端 <b id="webCount">0</b></button>
+          <button class="nav-item" data-filter="data"><span class="nav-icon category-dot data"></span>数据存储 <b id="dataCount">0</b></button>
+          <button class="nav-item" data-filter="message"><span class="nav-icon category-dot message"></span>消息中间件 <b id="messageCount">0</b></button>
+          <button class="nav-item" data-filter="infra"><span class="nav-icon category-dot infra"></span>基础设施 <b id="infraCount">0</b></button>
+          <button class="nav-item" data-filter="ai"><span class="nav-icon category-dot ai"></span>AI 与模型 <b id="aiCount">0</b></button>
+          <button class="nav-item" data-filter="other"><span class="nav-icon category-dot other"></span>其他服务 <b id="otherCount">0</b></button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="pulse-dot"></div>
+          <div><strong>实时扫描已开启</strong><span id="lastUpdated">等待首次扫描</span></div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="topline">
+          <div>
+            <div class="section-kicker">本机网络观察台</div>
+            <h2>端口一览</h2>
+          </div>
+          <div class="toolbar">
+            <label class="auto-refresh"><input type="checkbox" id="autoRefresh" /><span></span>自动刷新</label>
+            <button class="icon-button" id="themeButton" aria-label="切换主题">◐</button>
+            <button class="refresh-button" id="refreshButton"><span>↻</span>立即扫描</button>
+          </div>
+        </section>
+
+        <section class="stat-grid">
+          <article class="stat-card primary">
+            <span class="stat-label">正在监听</span>
+            <strong id="listeningStat">--</strong>
+            <small>个本地端点</small>
+            <div class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">涉及进程</span>
+            <strong id="processStat">--</strong>
+            <small>个独立 PID</small>
+          </article>
+          <article class="stat-card">
+            <span class="stat-label">已识别服务</span>
+            <strong id="developerStat">--</strong>
+            <small>常用服务端点</small>
+          </article>
+        </section>
+
+        <section class="port-panel">
+          <div class="panel-tools">
+            <label class="search-box">
+              <span>⌕</span>
+              <input id="searchInput" type="search" placeholder="搜索端口、PID、进程或路径…" autocomplete="off" />
+              <kbd>Ctrl K</kbd>
+            </label>
+            <div class="result-count"><b id="visibleCount">0</b> 条结果</div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>端口</th>
+                  <th>协议</th>
+                  <th>进程</th>
+                  <th>PID</th>
+                  <th>监听地址</th>
+                  <th>服务分类</th>
+                  <th aria-label="操作"></th>
+                </tr>
+              </thead>
+              <tbody id="portRows"></tbody>
+            </table>
+            <div class="empty-state" id="emptyState" hidden>
+              <div class="empty-radar"><span></span></div>
+              <h3>没有发现匹配项</h3>
+              <p>换一个端口号或进程名称试试。</p>
+            </div>
+            <div class="loading-state" id="loadingState">
+              <div class="scan-line"></div>
+              <p>正在扫描本机端口…</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="dialog-backdrop" id="dialogBackdrop" hidden>
+      <section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+        <div class="danger-beacon">!</div>
+        <div class="dialog-copy">
+          <span class="dialog-kicker">释放端口</span>
+          <h3 id="dialogTitle">确定结束这个进程？</h3>
+          <p id="dialogDescription"></p>
+          <div class="process-proof" id="processProof"></div>
+        </div>
+        <div class="dialog-actions">
+          <button class="text-button" id="cancelKill">取消</button>
+          <button class="danger-button" id="confirmKill">结束进程</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+    <script src="renderer.js"></script>
+  </body>
+</html>

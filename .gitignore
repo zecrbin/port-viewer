@@ -1,0 +1,19 @@
+node_modules/
+dist/
+
+# Logs and local runtime data
+*.log
+npm-debug.log*
+.cache/
+.runtime/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Electron build intermediates
+out/
+release/
+*.blockmap

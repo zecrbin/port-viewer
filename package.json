@@ -1,0 +1,54 @@
+{
+  "name": "port-viewer",
+  "version": "0.3.1",
+  "description": "Port Viewer - 面向 Windows 开发者的中文端口管理工具",
+  "main": "src/main.js",
+  "author": "zecrbin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zecrbin/port-viewer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zecrbin/port-viewer/issues"
+  },
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "build": "electron-builder --win nsis portable",
+    "build:dir": "electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12",
+    "sharp-cli": "^6.1.0"
+  },
+  "build": {
+    "appId": "com.huiliu.portviewer",
+    "productName": "Port Viewer",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icon.png",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "artifactName": "PortViewer-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "Port Viewer"
+    },
+    "portable": {
+      "artifactName": "PortViewer-Portable-${version}-${arch}.${ext}"
+    }
+  }
+}
